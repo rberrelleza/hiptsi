@@ -4,13 +4,13 @@ import logging
 import webapp2
 from waitress import serve
 
-from handlers import HomeHandler, CapabilitiesHandler, WebhookHandler, InstallableHandler
+from handlers import CapabilitiesHandler, WebhookHandler, InstallableHandler
 
 application = webapp2.WSGIApplication([
-    webapp2.Route(r'/addon/capabilities', handler=CapabilitiesHandler, methods=["GET"]),
-    webapp2.Route(r'/addon/webhook', handler=WebhookHandler, methods=["POST"]),
-    webapp2.Route(r'/addon/installable', handler=InstallableHandler, methods=["POST"]),
-    webapp2.Route(r'/addon/installable/<tenant_id>', handler=InstallableHandler, methods=["DELETE"])
+    webapp2.Route(r'/', handler=CapabilitiesHandler, methods=["GET"]),
+    webapp2.Route(r'/webhook', handler=WebhookHandler, methods=["POST"]),
+    webapp2.Route(r'/installable', handler=InstallableHandler, methods=["POST"]),
+    webapp2.Route(r'/installable/<tenant_id>', handler=InstallableHandler, methods=["DELETE"])
 ], debug=True)
 
 
@@ -20,7 +20,12 @@ def main():
             raise Exception("{var} must be set in the environment".format(var=var))
 
     logger = logging.getLogger("waitress")
-    logger.setLevel(logging.DEBUG)
+    logger.setLevel(logging.INFO)
+
+    logger = logging.getLogger("pewee")
+    logger.setLevel(logging.INFO)
+
+    logging.basicConfig(filename='hiptsi.log',level=logging.DEBUG)
     serve(application, port='8080')
 
 if __name__ == '__main__':

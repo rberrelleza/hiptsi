@@ -9,15 +9,15 @@
         },
 
         "installable": {
-            "allowGlobal": true,
+            "allowGlobal": false,
             "allowRoom": true,
-            "callbackUrl": "{{ base_url|safe }}/addon/installable"
+            "callbackUrl": "{{ base_url|safe }}/installable"
         },
         "webhook": [
             {
                 "event": "room_message",
                 "pattern": "{{ pattern }}",
-                "url": "{{ base_url|safe }}/addon/webhook"
+                "url": "{{ base_url|safe }}/webhook"
             }
         ]
     },
@@ -25,13 +25,13 @@
     "key": "rb-hiptsi",
     "name": "Hiptsi",
     "description": "Hiptsi adds a slash command to get jitsi meetings started",
-    "version": "1.0.0",
+    "version": "0.0.1",
     "vendor": {
         "name": "Ramiro Berrelleza",
         "url": "https://github.com/rberrelleza/hiptsi"
     },
     "links": {
-        "self": "{{base_url|safe}}/addon/capabilities",
+        "self": "{{base_url|safe}}",
         "homepage": "{{ base_url|safe }}"
     }
 }
