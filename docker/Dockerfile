@@ -11,4 +11,4 @@ RUN /hiptsi/venv/bin/pip install -r /hiptsi/requirements.txt
 
 EXPOSE 8080
 VOLUME /hiptsi/tenants.db
-CMD venv/bin/python2.7 /hiptsi/app.py
+CMD /hiptsi/venv/bin/python /hiptsi/app.py

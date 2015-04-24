@@ -1,13 +1,15 @@
 import json
 import hashlib
 import logging
+import os
 
 import requests
 from requests.auth import HTTPBasicAuth
 
 from peewee import Model, SqliteDatabase, CharField, DoesNotExist
 
-TENANT_DATABASE = "tenants.db"
+TENANT_DATABASE_VAR = "DATABASE_PATH"
+TENANT_DATABASE = os.environ.get(TENANT_DATABASE_VAR, "tenants.db")
 db = SqliteDatabase(TENANT_DATABASE)
 
 
