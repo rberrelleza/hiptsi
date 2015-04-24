@@ -1,12 +1,13 @@
 import json
-import logging
 import os
+import logging
 import sys
 import uuid
 
 import jinja2
 import webapp2
 
+from hiptsi import application
 from tenant import Tenant, TenantStore
 
 logger = logging.getLogger("waitress.handlers")
@@ -18,7 +19,6 @@ JINJA_ENVIRONMENT = jinja2.Environment(
 
 
 class CapabilitiesHandler(webapp2.RequestHandler):
-    BASEURL_VAR = "HIPTSI_BASEURL"
 
     def get(self):
         logger.debug("GET CapabilitiesHandler")
@@ -27,12 +27,10 @@ class CapabilitiesHandler(webapp2.RequestHandler):
         pattern = r'(?i)^r?\\/jitsi'
 
         self.response.headers['Content-Type'] = 'application/json'
-        self.response.write(template.render(dict(base_url=os.environ[self.BASEURL_VAR], pattern=pattern)))
+        self.response.write(template.render(dict(base_url=application.config["hiptsi"]["public_url"], pattern=pattern)))
 
 
 class WebhookHandler(webapp2.RequestHandler):
-    JITSIURL_VAR = "JITSI_URL"
-    COMMANDS = ["/jitsi"]
 
     def get(self):
         logger.debug("GET WebhookHandler")
@@ -52,7 +50,7 @@ class WebhookHandler(webapp2.RequestHandler):
         tenant = TenantStore.get_tenant(tenant_id)
 
         if message.startswith("/jitsi"):
-            url = "{}/{}".format(os.environ[self.JITSIURL_VAR], self.random_name(room_name))
+            url = "{}/{}".format(application.config["hiptsi"]["jitsi_url"], self.random_name(room_name))
             response = "{} has started a Jitsi Meet. <a href={}>Click here to join<a>.".format(user_name, url)
         else:
             response = "Sorry, I didn't understand your command"
@@ -62,6 +60,7 @@ class WebhookHandler(webapp2.RequestHandler):
 
     def random_name(self, room_name):
         return "{}{}".format(room_name.replace(" ", ""), str(uuid.uuid4()).replace("-", ""))
+
 
 class InstallableHandler(webapp2.RequestHandler):
 

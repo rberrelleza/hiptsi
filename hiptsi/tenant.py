@@ -5,12 +5,13 @@ import os
 
 import requests
 from requests.auth import HTTPBasicAuth
-
 from peewee import Model, SqliteDatabase, CharField, DoesNotExist
+
+from hiptsi import application
 
 logger = logging.getLogger("waitress.tenant")
 
-TENANT_DATABASE = "{}/tenants.db".format(os.environ.get("DATA_DIRECTORY", "."))
+TENANT_DATABASE = os.path.join(application.config["hiptsi"]["data_directory"], "tenants.db")
 logger.info("Using DB {}".format(TENANT_DATABASE))
 db = SqliteDatabase(TENANT_DATABASE)
 
@@ -90,5 +91,5 @@ class TenantStore(object):
             tenant = TenantStore.get_tenant(tenant_id)
             tenant.delete_instance()
             logger.info("Deleted tenant {}".format(tenant_id))
-        except ValueError
+        except ValueError:
             logger.info("Tenant {} doesn't exist".format(tenant_id))
