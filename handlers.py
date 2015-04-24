@@ -9,7 +9,7 @@ import webapp2
 
 from tenant import Tenant, TenantStore
 
-logger = logging.getLogger()
+logger = logging.getLogger("waitress.handlers")
 
 JINJA_ENVIRONMENT = jinja2.Environment(
     loader=jinja2.FileSystemLoader(os.path.join(os.path.dirname(__file__), "templates")),

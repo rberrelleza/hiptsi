@@ -10,5 +10,5 @@ RUN /hiptsi/venv/bin/pip install --upgrade pip==6.1.1
 RUN /hiptsi/venv/bin/pip install -r /hiptsi/requirements.txt
 
 EXPOSE 8080
-VOLUME /hiptsi/tenants.db
+VOLUME /data
 CMD /hiptsi/venv/bin/python /hiptsi/app.py

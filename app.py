@@ -1,5 +1,6 @@
 import os
 import logging
+from logging.handlers import RotatingFileHandler
 
 import webapp2
 from waitress import serve
@@ -20,12 +21,14 @@ def main():
             raise Exception("{var} must be set in the environment".format(var=var))
 
     logger = logging.getLogger("waitress")
-    logger.setLevel(logging.INFO)
+    logger.setLevel(logging.DEBUG)
 
-    logger = logging.getLogger("pewee")
-    logger.setLevel(logging.INFO)
+    data_location = os.environ.get("DATA_DIRECTORY", "/var/log/hiptsi")
+    handler = RotatingFileHandler('{}/application.log'.format(data_location), maxBytes=30*1024*1024, backupCount=5)
+    formatter = logging.Formatter("%(asctime)s - %(module)s - %(levelname)s - %(message)s")
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
 
-    logging.basicConfig(filename='hiptsi.log',level=logging.DEBUG)
     serve(application, port='8080')
 
 if __name__ == '__main__':

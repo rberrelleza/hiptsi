@@ -8,8 +8,10 @@ from requests.auth import HTTPBasicAuth
 
 from peewee import Model, SqliteDatabase, CharField, DoesNotExist
 
-TENANT_DATABASE_VAR = "DATABASE_PATH"
-TENANT_DATABASE = os.environ.get(TENANT_DATABASE_VAR, "tenants.db")
+logger = logging.getLogger("waitress.tenant")
+
+TENANT_DATABASE = "{}/tenants.db".format(os.environ.get("DATA_DIRECTORY", "."))
+logger.info("Using DB {}".format(TENANT_DATABASE))
 db = SqliteDatabase(TENANT_DATABASE)
 
 
@@ -51,6 +53,7 @@ class TenantStore(object):
 
     @classmethod
     def create_tenant(cls, body):
+        logger.info("Creating tenant")
         capabilitiesUrl = body["capabilitiesUrl"]
         response = requests.get(capabilitiesUrl)
         response.raise_for_status()
@@ -67,12 +70,12 @@ class TenantStore(object):
             tokenUrl=tokenUrl)
 
         inserted = TenantStore.get_tenant(body["oauthId"])
-
+        logger.info("Created tenant {}".format(tenant.tenant_id))
         return tenant
 
     @classmethod
     def get_tenant(cls, tenant_id):
-        logging.info("Retrieving tenant {}".format(tenant_id))
+        logger.debug("Retrieving tenant {}".format(tenant_id))
 
         try:
             return Tenant.select().where(Tenant.tenant_id == tenant_id).get()
@@ -84,7 +87,7 @@ class TenantStore(object):
     def delete_tenant(cls, tenant_id):
         tenant = TenantStore.get_tenant(tenant_id)
         if tenant:
-            logging.info("Deleting tenant {}".format(tenant_id))
+            logger.info("Deleting tenant {}".format(tenant_id))
             tenant.delete_instance()
         else:
-            logging.info("Tenant {} doesn't exist".format(tenant_id))
+            logger.info("Tenant {} doesn't exist".format(tenant_id))
