@@ -85,9 +85,10 @@ class TenantStore(object):
 
     @classmethod
     def delete_tenant(cls, tenant_id):
-        tenant = TenantStore.get_tenant(tenant_id)
-        if tenant:
+        try:
             logger.info("Deleting tenant {}".format(tenant_id))
+            tenant = TenantStore.get_tenant(tenant_id)
             tenant.delete_instance()
-        else:
+            logger.info("Deleted tenant {}".format(tenant_id))
+        except ValueError
             logger.info("Tenant {} doesn't exist".format(tenant_id))
