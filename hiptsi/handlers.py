@@ -10,7 +10,7 @@ import webapp2
 from hiptsi import application
 from tenant import Tenant, TenantStore
 
-logger = logging.getLogger("waitress.handlers")
+logger = logging.getLogger(__name__)
 
 JINJA_ENVIRONMENT = jinja2.Environment(
     loader=jinja2.FileSystemLoader(os.path.join(os.path.dirname(__file__), "templates")),
@@ -41,25 +41,25 @@ class WebhookHandler(webapp2.RequestHandler):
         logger.debug("POST WebhookHandler")
         body = json.loads(self.request.body)
         event = body.get("event")
-        tenant_id = body.get("oauth_client_id")
+        tenantId = body.get("oauth_client_id")
         message = body.get("item")["message"]["message"]
-        room_name= body.get("item")["room"]["name"]
-        room_id= body.get("item")["room"]["id"]
-        user_name= body.get("item")["message"]["from"]["name"]
+        roomName= body.get("item")["room"]["name"]
+        roomId= body.get("item")["room"]["id"]
+        userName= body.get("item")["message"]["from"]["name"]
 
-        tenant = TenantStore.get_tenant(tenant_id)
+        tenant = TenantStore.get(tenantId)
 
         if message.startswith("/jitsi"):
-            url = "{}/{}".format(application.config["hiptsi"]["jitsi_url"], self.random_name(room_name))
-            response = "{} has started a Jitsi Meet. <a href={}>Click here to join<a>.".format(user_name, url)
+            url = "{}/{}".format(application.config["hiptsi"]["jitsi_url"], self.random_name(roomName))
+            response = "{} has started a Jitsi Meet. <a href={}>Click here to join<a>.".format(userName, url)
         else:
             response = "Sorry, I didn't understand your command"
 
-        tenant.send_notification(room_id, response)
+        tenant.sendNotification(roomId, response)
         self.response.status = 204
 
-    def random_name(self, room_name):
-        return "{}{}".format(room_name.replace(" ", ""), str(uuid.uuid4()).replace("-", ""))
+    def random_name(self, roomName):
+        return "{}{}".format(roomName.replace(" ", ""), str(uuid.uuid4()).replace("-", ""))
 
 
 class InstallableHandler(webapp2.RequestHandler):
@@ -68,17 +68,18 @@ class InstallableHandler(webapp2.RequestHandler):
         logger.debug("POST InstallableHandler")
 
         try:
-            logger.info("Installing addon for: {}".format(self.request.body))
+            logger.info("Installing addon for: {}-{}".format(
+                self.request.json.get("groupId"), self.request.json.get("roomId")))
             body = json.loads(self.request.body)
-            tenant = TenantStore.create_tenant(body)
-            logger.info("Installed {}".format(tenant.tenant_id))
+            tenant = TenantStore.create(body)
+            logger.info("Installed {}".format(tenant.tenantId))
             self.response.status = 204
         except Exception as ex:
             logger.error("Error {} {}".format(self.request.body, ex))
             self.response.status = 500
 
-    def delete(self, tenant_id):
+    def delete(self, tenantId):
         logger.debug("DELETE InstallableHandler")
-        logger.info("Uninstalling {}".format(tenant_id))
-        TenantStore.delete_tenant(tenant_id)
+        logger.info("Uninstalling {}".format(tenantId))
+        TenantStore.delete(tenantId)
         self.response.status = 204

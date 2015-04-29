@@ -1,44 +1,56 @@
 import json
-import hashlib
 import logging
+import hashlib
 import os
 
 import requests
 from requests.auth import HTTPBasicAuth
-from peewee import Model, SqliteDatabase, CharField, DoesNotExist
+
+from sqlalchemy import Column, Integer, String
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy import create_engine
 
 from hiptsi import application
 
-logger = logging.getLogger("waitress.tenant")
+logger = logging.getLogger(__name__)
+logger.info("Using DB {}".format(application.config["hiptsi"]["mysql_connection"]))
 
-TENANT_DATABASE = os.path.join(application.config["hiptsi"]["data_directory"], "tenants.db")
-logger.info("Using DB {}".format(TENANT_DATABASE))
-db = SqliteDatabase(TENANT_DATABASE)
+engine = create_engine(application.config["hiptsi"]["mysql_connection"], echo=False)
+Session = sessionmaker(bind=engine)
+Base = declarative_base()
 
+class Tenant(Base):
+    __tablename__ = "tenants"
 
-class Tenant(Model):
-    tenant_id = CharField(unique=True, primary_key=True)
-    oauthSecret = CharField()
-    group = CharField()
-    room = CharField(null=True)
-    apiUrl = CharField()
-    tokenUrl = CharField()
+    tenantId = Column(String(1000), primary_key=True)
+    oauthSecret = Column(String(1000))
+    group = Column(Integer)
+    room = Column(Integer, nullable=True)
+    apiUrl = Column(String(1000))
+    tokenUrl = Column(String(1000))
 
-    class Meta:
-        database = db
+    def __init__(self, tenantId, oauthSecret, group, room, apiUrl, tokenUrl):
+        self.tenantId = tenantId
+        self.oauthSecret = oauthSecret
+        self.group = group
+        self.room = room
+        self.apiUrl = apiUrl
+        self.tokenUrl = tokenUrl
 
-    def get_token(self, scopes):
+    def _getToken(self, scopes):
         if len(scopes) == 0:
             raise ValueError("At least one scope is required")
 
         body = dict(grant_type="client_credentials", scope=" ".join(scopes))
-        response = requests.post(self.tokenUrl, auth=HTTPBasicAuth(self.tenant_id, self.oauthSecret), data=body)
+        response = requests.post(self.tokenUrl, auth=HTTPBasicAuth(self.tenantId, self.oauthSecret), data=body)
         response.raise_for_status()
         tokenData = response.json()
+        logger.debug("tokenData {}".format(tokenData))
         return tokenData["access_token"]
 
-    def send_notification(self, room_id, message):
-        token = self.get_token(["send_notification"])
+    def sendNotification(self, room_id, message):
+        token = self._getToken(["send_notification"])
         resourceUrl = "{}/room/{}/notification".format(self.apiUrl, room_id)
         response = requests.post(
             resourceUrl,
@@ -47,13 +59,12 @@ class Tenant(Model):
 
         response.raise_for_status()
 
+Base.metadata.create_all(engine)
 
 class TenantStore(object):
 
-    db.create_tables([Tenant], True)
-
     @classmethod
-    def create_tenant(cls, body):
+    def create(cls, body):
         logger.info("Creating tenant")
         capabilitiesUrl = body["capabilitiesUrl"]
         response = requests.get(capabilitiesUrl)
@@ -62,34 +73,48 @@ class TenantStore(object):
         apiUrl = capabilities["links"]["api"]
         tokenUrl = capabilities["capabilities"]["oauth2Provider"]["tokenUrl"]
 
-        tenant = Tenant.create(
-            tenant_id=body["oauthId"],
+        tenant = Tenant(
+            tenantId=body["oauthId"],
             oauthSecret=body["oauthSecret"],
             group=body.get("groupId"),
             room=body.get("roomId"),
             apiUrl=apiUrl,
             tokenUrl=tokenUrl)
 
-        inserted = TenantStore.get_tenant(body["oauthId"])
-        logger.info("Created tenant {}".format(tenant.tenant_id))
-        return tenant
+        session = Session()
+        try:
+            session.add(tenant)
+            session.commit()
+            logger.info("Created tenant {}".format(tenant.tenantId))
+            return tenant
+        finally:
+            session.close()
 
     @classmethod
-    def get_tenant(cls, tenant_id):
-        logger.debug("Retrieving tenant {}".format(tenant_id))
+    def get(cls, tenantId):
+        logger.debug("Retrieving tenant {}".format(tenantId))
 
+        session = Session()
         try:
-            return Tenant.select().where(Tenant.tenant_id == tenant_id).get()
+            return session.query(Tenant).filter(
+                Tenant.tenantId == tenantId).first()
         except DoesNotExist as ex:
             logging.error(ex)
-            raise ValueError("Tenant {} doesn't exist".format(tenant_id))
+            raise ValueError("Tenant {} doesn't exist".format(tenantId))
+        finally:
+            session.close()
 
     @classmethod
-    def delete_tenant(cls, tenant_id):
+    def delete(cls, tenantId):
+        session = Session()
+        logger.info("Deleting tenant {}".format(tenantId))
+
         try:
-            logger.info("Deleting tenant {}".format(tenant_id))
-            tenant = TenantStore.get_tenant(tenant_id)
-            tenant.delete_instance()
-            logger.info("Deleted tenant {}".format(tenant_id))
+            tenant = TenantStore.get(tenantId)
+            session.delete(tenant)
+            session.commit()
+            logger.info("Deleted tenant {}".format(tenantId))
         except ValueError:
-            logger.info("Tenant {} doesn't exist".format(tenant_id))
+            logger.info("Tenant {} doesn't exist".format(tenantId))
+        finally:
+            session.close()
