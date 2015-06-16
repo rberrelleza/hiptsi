@@ -17,7 +17,7 @@ def setupLogging(log_directory):
 application_config = {
     "hiptsi": {
         "public_url": os.environ.get("HIPTSI_PUBLICURL", "http://localhost:8080"),
-        "jitsi_url": os.environ.get("HIPTSI_JITSIURL", "http://meet.jitsi.org"),
+        "jitsi_url": os.environ.get("HIPTSI_JITSIURL", "https://meet.jitsi.org"),
         "mysql_connection": os.environ.get("HIPTSI_MYSQL", "sqlite:///tenants.db"),
         "logs": os.environ.get("HIPTSI_LOGS", "."),
         "port": int(os.environ.get("HIPTSI_PORT", "8080"))
