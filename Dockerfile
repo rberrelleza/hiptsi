@@ -5,7 +5,7 @@ RUN apk add  --no-cache \
     python-dev \
     py-pip \
     build-base \
-  && pip install virtualenv
+  && pip install virtualenv \
   && virtualenv /env
 
 COPY app /app
