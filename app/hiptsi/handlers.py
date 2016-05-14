@@ -24,7 +24,7 @@ class CapabilitiesHandler(webapp2.RequestHandler):
         logger.debug("GET CapabilitiesHandler")
         template = JINJA_ENVIRONMENT.get_template('capabilities.json')
 
-        pattern = r'(?i)^r?\\/jitsi'
+        pattern = r'(?i)^r?\\/video'
 
         self.response.headers['Content-Type'] = 'application/json'
         self.response.write(template.render(dict(base_url=application.config["hiptsi"]["public_url"], pattern=pattern)))
@@ -49,9 +49,9 @@ class WebhookHandler(webapp2.RequestHandler):
 
         tenant = TenantStore.get(tenantId)
 
-        if message.startswith("/jitsi"):
+        if message.startswith("/video"):
             url = "{}/{}".format(application.config["hiptsi"]["jitsi_url"], self.random_name(roomName))
-            response = "{} has started a Jitsi Meet. <a href={}>Click here to join<a>.".format(userName, url)
+            response = "{} has started a video conference. <a href={}>Click here to join<a>.".format(userName, url)
         else:
             response = "Sorry, I didn't understand your command"
 
