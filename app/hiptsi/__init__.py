@@ -30,6 +30,7 @@ application = webapp2.WSGIApplication(routes=[
     webapp2.Route(r'', handler="hiptsi.handlers.CapabilitiesHandler", methods=["GET"]),
     webapp2.Route(r'/', handler="hiptsi.handlers.CapabilitiesHandler", methods=["GET"]),
     webapp2.Route(r'/webhook', handler="hiptsi.handlers.WebhookHandler", methods=["POST"]),
+    webapp2.Route(r'/start', handler="hiptsi.handlers.StartVideoHandler", methods=["POST", "GET"]),
     webapp2.Route(r'/installable', handler="hiptsi.handlers.InstallableHandler", methods=["POST"]),
     webapp2.Route(r'/installable/<tenantId>', handler="hiptsi.handlers.InstallableHandler", methods=["DELETE"])
 ], config=application_config)

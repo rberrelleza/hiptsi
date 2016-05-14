@@ -18,24 +18,26 @@ JINJA_ENVIRONMENT = jinja2.Environment(
     autoescape=True)
 
 
+def send_notification(tenantId, roomId, userName, roomName):
+    tenant = TenantStore.get(tenantId)
+    random_name = "{}{}".format(roomName.replace(" ", ""), str(uuid.uuid4()).replace("-", ""))
+    url = "{}/{}".format(application.config["hiptsi"]["jitsi_url"], random_name)
+    response = "{} has started a video conference. <a href={}>Click here to join<a>.".format(userName, url)
+    tenant.sendNotification(roomId, response)
+
 class CapabilitiesHandler(webapp2.RequestHandler):
 
     def get(self):
         logger.debug("GET CapabilitiesHandler")
         template = JINJA_ENVIRONMENT.get_template('capabilities.json')
 
-        pattern = r'(?i)^r?\\/video'
+        pattern = r'(?i)^r?\\/jitsi'
 
         self.response.headers['Content-Type'] = 'application/json'
         self.response.write(template.render(dict(base_url=application.config["hiptsi"]["public_url"], pattern=pattern)))
 
 
 class WebhookHandler(webapp2.RequestHandler):
-
-    def get(self):
-        logger.debug("GET WebhookHandler")
-        self.response.headers['Content-Type'] = 'text/plain'
-        self.response.write('Hello, WebhookHandler!')
 
     def post(self):
         logger.debug("POST WebhookHandler")
@@ -50,17 +52,33 @@ class WebhookHandler(webapp2.RequestHandler):
         tenant = TenantStore.get(tenantId)
 
         if message.startswith("/video"):
-            url = "{}/{}".format(application.config["hiptsi"]["jitsi_url"], self.random_name(roomName))
-            response = "{} has started a video conference. <a href={}>Click here to join<a>.".format(userName, url)
+            send_notification(tenantId, roomId, userName, roomName)
         else:
             response = "Sorry, I didn't understand your command"
 
-        tenant.sendNotification(roomId, response)
         self.response.status = 204
 
     def random_name(self, roomName):
         return "{}{}".format(roomName.replace(" ", ""), str(uuid.uuid4()).replace("-", ""))
 
+class StartVideoHandler(webapp2.RequestHandler):
+
+    def get(self):
+        logger.debug("GET StartVideoHandler")
+        template = JINJA_ENVIRONMENT.get_template('start.json')
+        self.response.write(template.render(dict(base_url=application.config["hiptsi"]["public_url"])))
+
+    def post(self):
+        logger.debug("POST StartVideo")
+        body = json.loads(self.request.body)
+        tenantId = body.get("oauth_client_id")
+        message = body.get("item")["message"]["message"]
+        roomName= body.get("item")["room"]["name"]
+        roomId= body.get("item")["room"]["id"]
+        userName= body.get("item")["message"]["from"]["name"]
+
+        send_notification(tenantId, roomId, userName, roomName)
+        self.response.status = 204
 
 class InstallableHandler(webapp2.RequestHandler):
 

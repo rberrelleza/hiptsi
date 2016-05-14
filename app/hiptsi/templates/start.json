@@ -1,0 +1,13 @@
+{
+  "label": {
+    "type": "html",
+    "value": "Start Video"
+  },
+  "status": {
+    "type": "lozenge",
+    "value": {
+        "label": "LOCKED",
+        "type": "current"
+    }
+  }
+}

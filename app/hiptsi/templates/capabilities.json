@@ -19,7 +19,17 @@
                 "pattern": "{{ pattern }}",
                 "url": "{{ base_url|safe }}/webhook"
             }
-        ]
+        ],
+        "glance": [
+        {
+          "key": "rb-hiptsi-glance",
+          "name": {
+            "value": "Start"
+          },
+          "queryUrl": "{{localBaseUrl}}/start",
+          "target": "{{localBaseUrl}}/start"
+        }
+      ]
     },
 
     "key": "rb-hiptsi",
