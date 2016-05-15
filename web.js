@@ -12,6 +12,7 @@ var addon = app.addon()
   .hipchat()
   .allowGlobal(true)
   .allowRoom(true)
+  .avatar('https://s3.amazonaws.com/uploads.hipchat.com/10804/1332878/ygXvYzdGdsNiAVS/upload.png')
   .scopes('send_notification');
 
 track(addon);
@@ -29,10 +30,11 @@ addon.webhook('room_message', /^\/jitsi/i, function *() {
       .toString('hex') // convert to hexadecimal format
       .slice(0,20);   // return required number of characters
 
+  var call_url =  process.env.JITSI_ENV + '/' + roomName
   return yield notifier.sendTemplate('call', {
     caller: this.sender.name,
-    call_url: process.env[app.config.JITSI_ENV] + '/' + roomName
-  });
+    call_url: call_url
+  }, { color: 'purple'});
 });
 
 app.listen();

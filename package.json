@@ -1,7 +1,7 @@
 {
 "name": "rb-hiptsi",
 "displayName": "Hiptsi",
-"description": "videochatting on hipchat",
+"description": "Hiptsi adds a slash command to get jitsi meetings started",
 "version": "0.1.0",
 "author": {
 "name": "Ramiro Berrelleza",
