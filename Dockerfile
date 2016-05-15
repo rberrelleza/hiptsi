@@ -1,16 +1,6 @@
-FROM gliderlabs/alpine:3.3
-
-RUN apk add  --no-cache \
-    python \
-    python-dev \
-    py-pip \
-    build-base \
-  && pip install virtualenv \
-  && virtualenv /env
-
-COPY app /app
-RUN  /env/bin/pip install -r /app/requirements.txt
-
-EXPOSE 8080
-VOLUME /data
-CMD ["/env/bin/python", "/app/main.py"]
+FROM node:latest
+MAINTAINER Ramiro Berrelleza 'rberrelleza@gmail.com'
+COPY . /src
+RUN cd /src; npm install
+EXPOSE 5000
+CMD export MONGO_ENV=MONGO_URL; export MONGO_URL="mongodb://$MONGO_PORT_27017_TCP_ADDR:27017/ac"; node --harmony /src/web.js

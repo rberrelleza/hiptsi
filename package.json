@@ -1,0 +1,36 @@
+{
+"name": "rb-hiptsi",
+"displayName": "Hiptsi",
+"description": "videochatting on hipchat",
+"version": "0.1.0",
+"author": {
+"name": "Ramiro Berrelleza",
+"url": "http://github.com/rberrelleza/hiptsi"
+},
+"license": "Apache 2.0",
+  "engines": {
+    "node": "0.12.7"
+  },
+  "scripts": {
+  "web": "node --harmony web.js",
+  "web-dev": "nodemon --harmony -e js,css,hbs,html web.js",
+  "tunnel": "ngrok 5000"
+  },
+  "development": {
+  "port": 5000
+  },
+  "production": {
+    "localBaseUrl": "https://hiptsi.hipch.at",
+    "mongoEnv": "MONGOHQ_URL",
+    "jitsiURL": "https://meet.jitsi.org",
+    "port": "$PORT"
+  },
+  "dependencies": {
+    "ac-koa": "^0.2.6",
+    "ac-koa-hipchat": "^0.2.18",
+    "ac-koa-hipchat-keenio": "^0.2.0",
+    "ac-koa-hipchat-notifier": "^0.1.0",
+    "ac-node": "^0.2.2",
+    "co-array": "0.0.2"
+  }
+}
